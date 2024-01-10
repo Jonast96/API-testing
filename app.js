@@ -1,8 +1,10 @@
 const fs = require('fs');
-
 const express = require('express');
+const morgan = require('morgan');
+
 const app = express();
 
+app.use(morgan('tiny'));
 app.use(express.json());
 
 app.use((req, res, next) => {
@@ -83,6 +85,4 @@ app.route('/api/v1/tours').get(getAllTours).post(getTour);
 app.route('/api/v1/tours/:id').patch(updateTour).delete(deleteTour);
 
 const port = 3000;
-app.listen(port, () => {
-  console.log('Server is running on port 3000');
-});
+app.listen(port, () => {});
