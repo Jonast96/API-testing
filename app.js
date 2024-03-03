@@ -3,12 +3,12 @@ const morgan = require("morgan");
 const tourRouter = require("./routes/tourRoutes");
 const userRouter = require("./routes/userRoutes");
 
+require("dotenv").config({ path: "./config.env" });
+
 const app = express();
 app.use(express.json());
-console.log("Starting app.js...");
 
 if (process.env.NODE_ENV === "development") {
-  console.log("Development mode");
   app.use(morgan("dev"));
 }
 
