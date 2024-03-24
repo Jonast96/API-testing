@@ -6,13 +6,13 @@ const bcrypt = require("bcryptjs");
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, "A user must have a name"],
+    required: [true, "Please tell us your name!"],
   },
   email: {
     type: String,
-    required: [true, "A user must have an email"],
+    required: [true, "Please provide your email"],
     unique: true,
-    tolowercase: true,
+    lowercase: true,
     validate: [validator.isEmail, "Please provide a valid email"],
   },
   photo: String,
@@ -23,22 +23,28 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, "A user must have a password"],
+    required: [true, "Please provide a password"],
     minlength: 8,
     select: false,
   },
   passwordConfirm: {
     type: String,
-    required: [true, "A user must have a password confirmation"],
+    required: [true, "Please confirm your password"],
     validate: {
+      // This only works on CREATE and SAVE!!!
       validator: function (el) {
         return el === this.password;
       },
-      message: "Passwords are not the same",
+      message: "Passwords are not the same!",
     },
-    passwordChangedAt: Date,
-    passwordResetToken: String,
-    passwordResetExpires: Date,
+  },
+  passwordChangedAt: Date,
+  passwordResetToken: String,
+  passwordResetExpires: Date,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
   },
 });
 
@@ -54,6 +60,19 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
+userSchema.pre("save", function (next) {
+  if (!this.isModified("password") || this.isNew) return next();
+
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
+userSchema.pre(/^find/, function (next) {
+  // this points to the current query
+  this.find({ active: { $ne: false } });
+  next();
+});
+
 userSchema.methods.correctPassword = async function (
   candidatePassword,
   userPassword,
@@ -61,7 +80,7 @@ userSchema.methods.correctPassword = async function (
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
-userSchema.methods.changePasswordAfter = function (JWTTimestamp) {
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   if (this.passwordChangedAt) {
     const changedTimestamp = parseInt(
       this.passwordChangedAt.getTime() / 1000,
