@@ -1,3 +1,4 @@
+const path = require("path");
 const express = require("express");
 const morgan = require("morgan");
 const tourRouter = require("./routes/tourRoutes");
@@ -11,6 +12,9 @@ const globalErrorHandler = require("./controllers/errorController");
 const app = express();
 app.use(express.json());
 
+app.set("view engine", "pug");
+app.set("views", path.join(__dirname, "views"));
+
 const reviewRouter = require("./routes/reviewRoutes");
 
 if (process.env.NODE_ENV === "development") {
@@ -20,6 +24,14 @@ if (process.env.NODE_ENV === "development") {
 app.use(express.static(`${__dirname}/public`));
 
 //ROUTES
+
+app.get("/", (req, res) => {
+  res.status(200).render("base", {
+    tour: "The Forest Hiker",
+    user: " Jon Doe",
+  });
+});
+
 app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/reviews", reviewRouter);
